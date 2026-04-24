@@ -213,8 +213,15 @@ function ChatTab({ apiKey }) {
             <div className="orb-glow"/>
             <div className="orb-inner">⚡</div>
           </div>
-          <div className="empty-title">What can I do for you?</div>
-          <div className="empty-sub">Daily tasks, research, coding, analysis — ask me anything.</div>
+          <div style={{
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 26, fontWeight: 700, color: '#ffffff',
+            letterSpacing: '-0.01em', textAlign: 'center',
+          }}>What can I do for you?</div>
+          <div style={{
+            color: '#8a8aa0', fontSize: 14, lineHeight: 1.6,
+            maxWidth: 320, textAlign: 'center', marginTop: -8,
+          }}>Daily tasks, research, coding, analysis — ask me anything.</div>
           <div className="suggestions">
             {SUGGESTED.map((s,i) => (
               <button key={i} className="sug-btn" onClick={() => send(s.text)}>
@@ -272,10 +279,9 @@ function EmailTab({ apiKey }) {
   const [emails, setEmails]       = useState([])
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
-  const [drafting, setDrafting]   = useState(null) // email id being drafted
+  const [drafting, setDrafting]   = useState(null)
   const [connecting, setConnecting] = useState(false)
 
-  // On mount, check if already signed in
   useEffect(() => {
     (async () => {
       try {
@@ -335,21 +341,16 @@ function EmailTab({ apiKey }) {
     setDrafting(email.id)
     setError(null)
     try {
-      // Get full email body
       const full = await getEmailBody(email.id)
       const bodyText = stripHtml(full.body?.content || full.bodyPreview || '')
 
-      // Ask Claude to draft a reply
       const replyText = await draftEmailReply(apiKey, {
         from: full.from?.emailAddress?.name || full.from?.emailAddress?.address || 'Unknown',
         subject: full.subject || '(no subject)',
         body: bodyText,
       })
 
-      // Save draft in Outlook
       await createDraftReply(email.id, replyText)
-
-      // Mark this email as drafted
       setEmails(prev => prev.map(e => e.id === email.id ? { ...e, _drafted: true } : e))
     } catch (err) {
       setError(err.message)
@@ -358,31 +359,104 @@ function EmailTab({ apiKey }) {
     }
   }
 
-  // Not connected yet
   if (!account) {
     return (
-      <div className="email-welcome">
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '28px 24px',
+        overflowY: 'auto',
+        gap: 18,
+        textAlign: 'center',
+      }}>
         <div className="empty-orb">
-          <div className="orb-glow" style={{background: 'radial-gradient(circle, #00b7c3aa 0%, transparent 70%)'}}/>
+          <div className="orb-glow" style={{background: 'radial-gradient(circle, rgba(0,183,195,0.6) 0%, transparent 70%)'}}/>
           <div className="orb-inner">📧</div>
         </div>
-        <div className="empty-title">Connect Your Outlook</div>
-        <div className="empty-sub">
+
+        <div style={{
+          fontFamily: "'Syne', sans-serif",
+          fontSize: 26,
+          fontWeight: 700,
+          color: '#ffffff',
+          letterSpacing: '-0.01em',
+          marginTop: 4,
+        }}>
+          Connect Your Outlook
+        </div>
+
+        <div style={{
+          color: '#8a8aa0',
+          fontSize: 14,
+          lineHeight: 1.6,
+          maxWidth: 320,
+          marginTop: -6,
+        }}>
           AXIOM reads your inbox, drafts replies in your voice, and saves them to your Outlook drafts — you review &amp; send.
         </div>
-        <button className="cta" onClick={handleConnect} disabled={connecting}>
+
+        <button
+          onClick={handleConnect}
+          disabled={connecting}
+          style={{
+            width: '100%',
+            maxWidth: 280,
+            padding: 14,
+            background: 'linear-gradient(135deg, #7c6dfa 0%, #fa6d9a 100%)',
+            border: 'none',
+            borderRadius: 12,
+            color: 'white',
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 700,
+            fontSize: 15,
+            letterSpacing: '0.05em',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: '0 4px 14px rgba(124,109,250,0.3)',
+            opacity: connecting ? 0.6 : 1,
+            marginTop: 8,
+          }}
+        >
           {connecting ? 'Connecting…' : 'Connect Outlook'}
-          <span className="cta-arrow">→</span>
+          <span>→</span>
         </button>
-        {error && <div className="error-box">⚠️ {error}</div>}
-        <div className="privacy-note">
-          Your emails stay between you and Microsoft. AXIOM only reads the ones you show it.
+
+        {error && (
+          <div style={{
+            background: 'rgba(250,109,154,0.08)',
+            border: '1px solid rgba(250,109,154,0.3)',
+            color: '#fa6d9a',
+            borderRadius: 10,
+            padding: '10px 14px',
+            fontSize: 13,
+            lineHeight: 1.5,
+            maxWidth: '100%',
+            wordBreak: 'break-word',
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        <div style={{
+          fontSize: 11,
+          color: '#5a5a70',
+          maxWidth: 280,
+          lineHeight: 1.5,
+          marginTop: 8,
+        }}>
+          Your emails stay between you and Microsoft.
+          AXIOM only accesses your inbox when you're using the app.
         </div>
       </div>
     )
   }
 
-  // Connected - show inbox
   return (
     <div className="email-main">
       <div className="account-bar">
@@ -401,7 +475,7 @@ function EmailTab({ apiKey }) {
         </div>
       </div>
 
-      {error && <div className="error-box">⚠️ {error}</div>}
+      {error && <div className="error-box" style={{margin:'10px 14px'}}>⚠️ {error}</div>}
 
       {loading && emails.length === 0 ? (
         <div className="email-loading">
@@ -462,7 +536,7 @@ function EmailTab({ apiKey }) {
 export default function App() {
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem('axiom_api_key') || '')
   const [showSettings, setShow]   = useState(false)
-  const [tab, setTab]             = useState('chat') // 'chat' | 'email'
+  const [tab, setTab]             = useState('chat')
 
   if (!apiKey) {
     return <Settings onSave={k => { setApiKey(k); setShow(false) }} hasKey={false}/>
@@ -475,7 +549,6 @@ export default function App() {
       <div className="bg-glow bg-glow-1"/>
       <div className="bg-glow bg-glow-2"/>
 
-      {/* Header */}
       <header className="header">
         <div className="header-left">
           <Logo/>
@@ -490,7 +563,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')}>
           <span className="tab-icon">💬</span>
@@ -500,15 +572,12 @@ export default function App() {
           <span className="tab-icon">📧</span>
           <span>Email</span>
         </button>
-        <div className={`tab-indicator tab-${tab}`}/>
       </div>
 
-      {/* Body */}
       <main className="main">
         {tab === 'chat' ? <ChatTab apiKey={apiKey}/> : <EmailTab apiKey={apiKey}/>}
       </main>
 
-      {/* Settings overlay */}
       {showSettings && (
         <Settings
           onSave={k => { setApiKey(k); setShow(false) }}
@@ -523,7 +592,7 @@ export default function App() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// Styles — premium dark glassmorphism design
+// Styles
 // ═══════════════════════════════════════════════════════════════════
 
 const styles = `
@@ -543,7 +612,6 @@ html, body {
   color: #e8e8f0;
   font-family: 'Inter', -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 #root {
@@ -554,7 +622,6 @@ html, body {
 
 button { font-family: inherit; }
 
-/* ─── App shell ──────────────────────────────────────── */
 .app {
   display: flex;
   flex-direction: column;
@@ -565,7 +632,6 @@ button { font-family: inherit; }
   z-index: 1;
 }
 
-/* ─── Background layers ──────────────────────────────── */
 .bg-gradient {
   position: fixed;
   inset: 0;
@@ -583,7 +649,6 @@ button { font-family: inherit; }
     linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 0%, transparent 80%);
   pointer-events: none;
   z-index: 0;
 }
@@ -621,7 +686,6 @@ button { font-family: inherit; }
   50% { transform: translate(-80px, -60px) scale(1.2); }
 }
 
-/* ─── Header ─────────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
@@ -645,41 +709,20 @@ button { font-family: inherit; }
   font-family: 'Syne', sans-serif;
   font-weight: 800;
   color: white; letter-spacing: 0.5px;
-  box-shadow:
-    0 4px 14px rgba(124,109,250,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 4px 14px rgba(124,109,250,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
   flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.logo-mark::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
-  animation: shine 3s ease-in-out infinite;
-}
-
-@keyframes shine {
-  0%, 100% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
 }
 
 .brand {
   font-family: 'Syne', sans-serif;
   font-weight: 700; font-size: 18px; letter-spacing: 0.06em;
-  background: linear-gradient(90deg, #ffffff 0%, #9090a8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
 }
 
 .brand-sub {
   font-size: 10px; color: #5a5a70;
   text-transform: uppercase; letter-spacing: 0.12em;
-  font-weight: 500;
-  margin-top: 1px;
+  font-weight: 500; margin-top: 1px;
 }
 
 .header-right { display: flex; align-items: center; gap: 8px; }
@@ -699,17 +742,14 @@ button { font-family: inherit; }
   background: rgba(255,255,255,0.08);
   border-color: rgba(124,109,250,0.4);
   color: #fff;
-  transform: translateY(-1px);
 }
 
 .icon-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ─── Tabs ───────────────────────────────────────────── */
 .tabs {
   display: flex;
   padding: 12px 16px 0;
   gap: 6px;
-  position: relative;
   flex-shrink: 0;
 }
 
@@ -719,18 +759,18 @@ button { font-family: inherit; }
   background: transparent;
   border: none;
   color: #6a6a80;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 13px; font-weight: 500;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 7px;
   border-radius: 10px;
-  transition: color 0.2s ease, background 0.2s ease;
-  position: relative;
-  z-index: 2;
+  transition: color 0.2s, background 0.2s;
 }
 
-.tab.active { color: #fff; }
+.tab.active {
+  color: #fff;
+  background: rgba(124,109,250,0.15);
+}
 
 .tab:hover:not(.active) {
   color: #a0a0b8;
@@ -739,7 +779,6 @@ button { font-family: inherit; }
 
 .tab-icon { font-size: 14px; }
 
-/* ─── Main body ──────────────────────────────────────── */
 .main {
   flex: 1;
   overflow: hidden;
@@ -748,7 +787,6 @@ button { font-family: inherit; }
   padding-top: 8px;
 }
 
-/* ─── Empty state (chat) ─────────────────────────────── */
 .empty {
   flex: 1;
   display: flex; flex-direction: column;
@@ -785,31 +823,13 @@ button { font-family: inherit; }
   background: linear-gradient(135deg, #7c6dfa 0%, #fa6d9a 100%);
   display: flex; align-items: center; justify-content: center;
   font-size: 28px;
-  box-shadow:
-    0 10px 40px rgba(124,109,250,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 10px 40px rgba(124,109,250,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
   animation: float 4s ease-in-out infinite;
 }
 
 @keyframes float {
   0%,100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
-}
-
-.empty-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 26px; font-weight: 700;
-  background: linear-gradient(135deg, #ffffff 20%, #6a6a80 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-align: center;
-  letter-spacing: -0.01em;
-}
-
-.empty-sub {
-  color: #6a6a80; font-size: 14px; line-height: 1.6;
-  max-width: 300px; text-align: center;
-  margin-top: -8px;
 }
 
 .suggestions {
@@ -831,23 +851,18 @@ button { font-family: inherit; }
   color: #d8d8e8;
   font-family: inherit; font-size: 12.5px;
   display: flex; align-items: flex-start;
-  gap: 9px;
-  line-height: 1.4;
+  gap: 9px; line-height: 1.4;
   transition: all 0.18s ease;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .sug-btn:hover, .sug-btn:active {
   background: rgba(255,255,255,0.06);
   border-color: rgba(124,109,250,0.4);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(124,109,250,0.15);
 }
 
 .sug-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
 
-/* ─── Messages ───────────────────────────────────────── */
 .messages {
   flex: 1;
   overflow-y: auto;
@@ -857,9 +872,7 @@ button { font-family: inherit; }
 }
 
 .msg-row {
-  display: flex;
-  gap: 9px;
-  align-items: flex-end;
+  display: flex; gap: 9px; align-items: flex-end;
   animation: msg-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -872,13 +885,11 @@ button { font-family: inherit; }
 
 .msg-row .logo-mark {
   width: 28px; height: 28px;
-  font-size: 9px;
-  border-radius: 50%;
+  font-size: 9px; border-radius: 50%;
 }
 
 .user-avatar {
-  width: 28px; height: 28px;
-  border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
   color: #8a8aa0;
@@ -891,10 +902,8 @@ button { font-family: inherit; }
 .bubble {
   max-width: 78%;
   padding: 11px 15px;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 14px; line-height: 1.6;
   border-radius: 18px;
-  position: relative;
 }
 
 .bubble.user {
@@ -920,17 +929,13 @@ button { font-family: inherit; }
 }
 
 .ts {
-  font-size: 10px;
-  margin-top: 5px;
-  opacity: 0.4;
+  font-size: 10px; margin-top: 5px; opacity: 0.4;
 }
 
 .bubble.user .ts { text-align: right; }
 .bubble.agent .ts { text-align: left; }
 
-.typing {
-  display: flex; gap: 5px; padding: 2px 0;
-}
+.typing { display: flex; gap: 5px; padding: 2px 0; }
 
 .typing span {
   width: 7px; height: 7px; border-radius: 50%;
@@ -947,7 +952,6 @@ button { font-family: inherit; }
   30% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* ─── Markdown content ───────────────────────────────── */
 .msg-content strong { color: #fff; font-weight: 600; }
 .msg-content em { font-style: italic; color: #c0c0dc; }
 .ax-h1 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin: 12px 0 5px; color: #fff; }
@@ -965,11 +969,8 @@ button { font-family: inherit; }
   padding: 12px;
   overflow-x: auto;
   font-family: 'SF Mono', 'Courier New', monospace;
-  font-size: 12px;
-  margin: 8px 0;
-  color: #6dfacc;
-  line-height: 1.5;
-  white-space: pre;
+  font-size: 12px; margin: 8px 0;
+  color: #6dfacc; line-height: 1.5; white-space: pre;
 }
 
 .ax-inline {
@@ -978,11 +979,9 @@ button { font-family: inherit; }
   border-radius: 5px;
   padding: 1px 6px;
   font-family: 'SF Mono', monospace;
-  font-size: 12.5px;
-  color: #fa6d9a;
+  font-size: 12.5px; color: #fa6d9a;
 }
 
-/* ─── Composer ───────────────────────────────────────── */
 .composer {
   padding: 10px 14px;
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
@@ -992,25 +991,15 @@ button { font-family: inherit; }
 
 .clear-chat-btn {
   position: absolute;
-  top: -26px;
-  left: 50%;
+  top: -26px; left: 50%;
   transform: translateX(-50%);
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
   color: #6a6a80;
   border-radius: 100px;
   padding: 4px 11px;
-  font-size: 11px;
-  cursor: pointer;
+  font-size: 11px; cursor: pointer;
   display: flex; align-items: center; gap: 5px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all 0.15s;
-}
-
-.clear-chat-btn:hover {
-  color: #fa6d9a;
-  border-color: rgba(250,109,154,0.4);
 }
 
 .input-wrap {
@@ -1027,7 +1016,6 @@ button { font-family: inherit; }
 .input-wrap:focus-within {
   border-color: rgba(124,109,250,0.5);
   background: rgba(255,255,255,0.06);
-  box-shadow: 0 0 0 4px rgba(124,109,250,0.1);
 }
 
 .input-wrap textarea {
@@ -1058,12 +1046,10 @@ button { font-family: inherit; }
 
 .send-btn:hover:not(:disabled) {
   transform: scale(1.06);
-  box-shadow: 0 4px 16px rgba(124,109,250,0.5);
 }
 
 .send-btn:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
 
-/* ─── Settings overlay ──────────────────────────────── */
 .settings-overlay {
   position: fixed;
   inset: 0;
@@ -1073,10 +1059,7 @@ button { font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
   z-index: 100;
-  animation: fade-in 0.2s ease;
 }
-
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 .settings-card {
   width: 100%; max-width: 380px;
@@ -1086,13 +1069,7 @@ button { font-family: inherit; }
   padding: 36px 28px 28px;
   position: relative;
   overflow: hidden;
-  animation: card-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-}
-
-@keyframes card-in {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .settings-glow {
@@ -1120,9 +1097,7 @@ button { font-family: inherit; }
   font-family: 'Syne', sans-serif;
   font-weight: 700; font-size: 26px;
   letter-spacing: 0.04em;
-  background: linear-gradient(135deg, #ffffff 20%, #a0a0b8 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
 }
 
 .settings-sub {
@@ -1137,15 +1112,11 @@ button { font-family: inherit; }
 }
 
 .field-label {
-  font-size: 12px;
-  color: #8a8aa0;
-  font-weight: 500;
-  margin-bottom: 2px;
+  font-size: 12px; color: #8a8aa0;
+  font-weight: 500; margin-bottom: 2px;
 }
 
-.key-row {
-  display: flex; gap: 8px;
-}
+.key-row { display: flex; gap: 8px; }
 
 .key-row input {
   flex: 1;
@@ -1156,7 +1127,6 @@ button { font-family: inherit; }
   color: #e8e8f0;
   font-family: inherit; font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
 }
 
 .key-row input:focus { border-color: rgba(124,109,250,0.5); }
@@ -1170,10 +1140,7 @@ button { font-family: inherit; }
   cursor: pointer; font-size: 16px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  transition: border-color 0.2s;
 }
-
-.eye-btn:hover { border-color: rgba(255,255,255,0.2); }
 
 .cta {
   width: 100%;
@@ -1187,22 +1154,12 @@ button { font-family: inherit; }
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
-  transition: all 0.18s ease;
   box-shadow: 0 4px 14px rgba(124,109,250,0.3);
 }
 
-.cta:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(124,109,250,0.5);
-}
+.cta:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
-.cta:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; transform: none; }
-
-.cta-arrow {
-  transition: transform 0.2s ease;
-}
-
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+.cta-arrow { transition: transform 0.2s ease; }
 
 .cta-secondary {
   width: 100%;
@@ -1214,10 +1171,7 @@ button { font-family: inherit; }
   font-family: inherit;
   font-weight: 500; font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s;
 }
-
-.cta-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
 
 .get-key-link {
   color: #6a6a80;
@@ -1225,33 +1179,6 @@ button { font-family: inherit; }
   text-align: center;
   text-decoration: none;
   margin-top: 4px;
-  transition: color 0.15s;
-}
-
-.get-key-link:hover { color: #7c6dfa; }
-
-/* ─── Email tab ──────────────────────────────────────── */
-.email-welcome {
-  flex: 1;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 28px 24px;
-  overflow-y: auto;
-  gap: 18px;
-  text-align: center;
-}
-
-.email-welcome .cta {
-  max-width: 260px;
-  margin-top: 8px;
-}
-
-.privacy-note {
-  font-size: 11px;
-  color: #4a4a5c;
-  max-width: 280px;
-  line-height: 1.5;
-  margin-top: 8px;
 }
 
 .error-box {
@@ -1262,7 +1189,6 @@ button { font-family: inherit; }
   padding: 10px 14px;
   font-size: 13px;
   line-height: 1.5;
-  max-width: 100%;
   word-break: break-word;
 }
 
@@ -1288,7 +1214,6 @@ button { font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
   color: white; font-weight: 700; font-size: 14px;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(0,183,195,0.3);
 }
 
 .account-name {
@@ -1316,9 +1241,7 @@ button { font-family: inherit; }
   gap: 16px;
 }
 
-.loading-text {
-  color: #6a6a80; font-size: 13px;
-}
+.loading-text { color: #6a6a80; font-size: 13px; }
 
 .empty-inbox {
   flex: 1;
@@ -1339,7 +1262,6 @@ button { font-family: inherit; }
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
   padding: 13px 15px;
-  transition: all 0.18s ease;
   position: relative;
 }
 
@@ -1406,13 +1328,7 @@ button { font-family: inherit; }
   font-size: 12.5px; font-weight: 600;
   cursor: pointer;
   display: flex; align-items: center; gap: 6px;
-  transition: all 0.15s ease;
   box-shadow: 0 2px 10px rgba(124,109,250,0.3);
-}
-
-.draft-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(124,109,250,0.5);
 }
 
 .draft-btn:disabled { opacity: 0.7; cursor: default; }
@@ -1437,7 +1353,6 @@ button { font-family: inherit; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ─── Scrollbars ─────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
